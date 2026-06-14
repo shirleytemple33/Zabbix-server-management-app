@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zabbix Config</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;font-size:14px;background:#f5f5f5;color:#111}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:180px;min-width:180px;background:#fff;border-right:1px solid #e5e5e5;padding:16px 0;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:20}
+.main{margin-left:180px;flex:1;min-width:0}
+.sidebar-title{font-size:13px;font-weight:600;padding:0 16px 12px;border-bottom:1px solid #e5e5e5;margin-bottom:8px}
+.sidebar-title span{color:#888;font-weight:400;font-size:11px;display:block;margin-top:2px}
+.nav-item{display:block;padding:7px 16px;color:#444;font-size:13px;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:#f5f5f5}
+.nav-item.active{background:#f0f0f0;color:#111;font-weight:500}
+.nav-section{font-size:11px;color:#aaa;padding:12px 16px 4px;text-transform:uppercase;letter-spacing:.05em}
+.topbar{background:#fff;border-bottom:1px solid #e5e5e5;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.page-title{font-size:14px;font-weight:600}
+.conn-badge{font-size:11px;background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:3px}
+.content{padding:20px}
+.page{display:none}
+.page.active{display:block}
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:6px;margin-bottom:16px;overflow:hidden}
+.card-header{padding:10px 16px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;background:#fafafa}
+.card-title{font-size:13px;font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 16px;color:#666;font-weight:500;font-size:12px;border-bottom:1px solid #e5e5e5;white-space:nowrap;background:#fafafa}
+td{padding:7px 16px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+.btn{font-size:13px;padding:5px 12px;border-radius:4px;border:1px solid #ddd;background:#fff;color:#333;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn:hover{background:#f5f5f5}
+.btn-primary{background:#111;color:#fff;border-color:#111}
+.btn-primary:hover{background:#333}
+.btn-danger{color:#c62828;border-color:#fcc}
+.btn-danger:hover{background:#fce8e8}
+.btn-sm{font-size:12px;padding:3px 8px}
+.btn-xs{font-size:11px;padding:2px 6px}
+.badge{font-size:11px;padding:2px 7px;border-radius:3px;display:inline-block;font-weight:500;white-space:nowrap}
+.badge-ok{background:#e8f5e9;color:#2e7d32}
+.badge-warn{background:#fff3e0;color:#e65100}
+.badge-err{background:#fce8e8;color:#c62828}
+.badge-info{background:#e8eaf6;color:#283593}
+.badge-gray{background:#f0f0f0;color:#555}
+.badge-skip{background:#fff9c4;color:#f57f17}
+.badge-purple{background:#f3e5f5;color:#6a1b9a}
+.form-group{margin-bottom:14px}
+label{display:block;font-size:12px;color:#555;margin-bottom:4px;font-weight:500}
+input[type=text],input[type=password],input[type=url],select,textarea{width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;background:#fff;color:#111;font-family:inherit}
+input:focus,select:focus{outline:2px solid #111;outline-offset:1px;border-color:transparent}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-note{font-size:12px;color:#888;margin-top:3px}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f5f5f5}
+.login-box{background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:32px;width:320px}
+.login-title{font-size:18px;font-weight:600;margin-bottom:4px}
+.login-sub{font-size:13px;color:#666;margin-bottom:24px}
+.alert{padding:10px 14px;border-radius:4px;font-size:13px;margin-bottom:16px}
+.alert-err{background:#fce8e8;color:#c62828;border:1px solid #f5c6c6}
+.alert-ok{background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9}
+.alert-info{background:#e8eaf6;color:#283593;border:1px solid #c5cae9}
+.alert-warn{background:#fff3e0;color:#e65100;border:1px solid #ffe0b2}
+.upload-area{border:2px dashed #ddd;border-radius:6px;padding:28px;text-align:center;color:#888;font-size:13px;cursor:pointer}
+.upload-area:hover{border-color:#999;background:#fafafa}
+.upload-area input{display:none}
+.filter-bar{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.filter-bar input[type=text]{width:200px}
+.filter-bar select{width:auto}
+.text-muted{color:#888}
+.text-err{color:#c62828}
+.text-ok{color:#2e7d32}
+.text-warn{color:#e65100}
+.monospace{font-family:monospace;font-size:12px}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid #ddd;border-top-color:#111;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row td{text-align:center;padding:24px;color:#888}
+.tab-bar{display:flex;border-bottom:1px solid #e5e5e5;margin-bottom:16px}
+.tab{padding:9px 16px;font-size:13px;cursor:pointer;color:#666;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none}
+.tab:hover{color:#111;background:#fafafa}
+.tab.active{color:#111;font-weight:500;border-bottom-color:#111}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+.modal-backdrop.open{display:flex}
+.modal{background:#fff;border-radius:8px;padding:24px;width:480px;border:1px solid #ddd;max-height:85vh;overflow-y:auto}
+.modal-title{font-size:14px;font-weight:600;margin-bottom:16px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.progress-bar-wrap{background:#f0f0f0;border-radius:4px;height:6px;margin:8px 0;overflow:hidden}
+.progress-bar{background:#111;height:100%;transition:width .2s;border-radius:4px}
+.log-box{background:#f5f5f5;border:1px solid #e5e5e5;border-radius:4px;padding:10px;font-family:monospace;font-size:12px;max-height:200px;overflow-y:auto;margin-top:10px}
+.log-ok{color:#2e7d32}.log-err{color:#c62828}.log-warn{color:#e65100}.log-info{color:#283593}
+.sev-select{font-size:12px;padding:3px 6px;border-radius:3px;border:1px solid #ddd;background:#fff;cursor:pointer}
+.toggle{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:20px;cursor:pointer;transition:.2s}
+.toggle-slider:before{content:'';position:absolute;width:14px;height:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:#111}
+.toggle input:checked+.toggle-slider:before{transform:translateX(16px)}
+.tag-chip{display:inline-flex;align-items:center;gap:4px;background:#f0f0f0;border-radius:3px;padding:2px 6px;font-size:11px;color:#444}
+.tag-chip .remove{cursor:pointer;color:#999;font-size:13px;line-height:1}
+.tag-chip .remove:hover{color:#c62828}
+.tag-input-wrap{display:flex;gap:6px;margin-top:6px}
+.tag-input-wrap input{flex:1;font-size:12px;padding:4px 8px}
+.inline-edit-row td{background:#fffde7!important}
+.changed-badge{font-size:10px;background:#fff3e0;color:#e65100;padding:1px 5px;border-radius:2px;margin-left:4px}
+.section-hint{font-size:12px;color:#888;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="login-wrap">
+  <div class="login-box">
+    <div class="login-title">Zabbix Config</div>
+    <div class="login-sub">Connect to your Zabbix server</div>
+    <div id="login-error" class="alert alert-err" style="display:none"></div>
+    <div class="form-group">
+      <label>Zabbix URL</label>
+      <input type="url" id="zabbix-url" placeholder="http://192.168.1.10/zabbix">
+      <div class="form-note">Include /zabbix path if needed</div>
+    </div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="zabbix-user" value="Admin">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="zabbix-pass">
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Connect</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="layout" style="display:none">
+  <div class="sidebar">
+    <div class="sidebar-title">Zabbix Config <span style="color:#bbb;font-weight:400">v1.0</span><span id="sidebar-server"></span></div>
+    <div class="nav-section">Hosts</div>
+    <button class="nav-item active" onclick="showPage('hosts',this)">Hosts</button>
+    <button class="nav-item" onclick="showPage('import',this)">Import / Update</button>
+    <div class="nav-section">Tune alerts</div>
+    <button class="nav-item" onclick="showPage('triggers',this)">Triggers</button>
+    <button class="nav-item" onclick="showPage('macros',this)">Macros</button>
+    <button class="nav-item" onclick="showPage('actions',this)">Actions</button>
+    <div class="nav-section">Account</div>
+    <button class="nav-item" onclick="doLogout()">Disconnect</button>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="page-title" id="page-title">Hosts</span>
+        <span class="conn-badge">Connected</span>
+      </div>
+      <div id="topbar-actions"></div>
+    </div>
+    <div class="content">
+
+      <!-- HOSTS -->
+      <div id="page-hosts" class="page active">
+        <div id="hosts-alert" style="display:none"></div>
+        <div class="filter-bar">
+          <input type="text" id="host-search" placeholder="Search hosts…" oninput="filterHosts()">
+          <select id="host-group-filter" onchange="filterHosts()"><option value="">All groups</option></select>
+          <select id="host-status-filter" onchange="filterHosts()">
+            <option value="">All statuses</option>
+            <option value="1">Available</option>
+            <option value="2">Unavailable</option>
+            <option value="0">Unknown</option>
+          </select>
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <button class="btn btn-sm" onclick="exportHostsCSV()">Export CSV</button>
+            <button class="btn btn-sm" onclick="openMassModal()">Bulk assign template</button>
+            <button class="btn btn-sm btn-primary" onclick="loadHosts()">↻ Refresh</button>
+          </div>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr>
+              <th><input type="checkbox" id="select-all-hosts" onchange="toggleAllHosts(this)"></th>
+              <th>Name</th><th>DNS / IP</th><th>Templates</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody id="hosts-tbody"><tr class="loading-row"><td colspan="6"><span class="spinner"></span> Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TRIGGERS -->
+      <div id="page-triggers" class="page">
+        <div class="tab-bar">
+          <button class="tab active" onclick="showTriggersTab('template',this)">By template</button>
+          <button class="tab" onclick="showTriggersTab('host',this)">By host</button>
+        </div>
+
+        <!-- TEMPLATE TRIGGERS -->
+        <div id="triggers-tab-template">
+          <div class="filter-bar">
+            <select id="trig-template-select" onchange="loadTemplateTriggers()" style="width:280px">
+              <option value="">— Select a template —</option>
+            </select>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn btn-sm" id="trig-tmpl-save-btn" style="display:none" onclick="saveTemplateTriggerChanges()">Save all changes</button>
+            </div>
+          </div>
+          <div id="trig-tmpl-hint" class="section-hint">Select a template to view and edit its trigger prototypes. Changes affect all hosts using this template.</div>
+          <div id="trig-tmpl-content" style="display:none">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Trigger prototypes</span>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <span class="text-muted" style="font-size:12px">Bulk set selected:</span>
+                  <select id="bulk-sev-select" class="sev-select">
+                    <option value="">— severity —</option>
+                    <option value="0">Not classified</option>
+                    <option value="1">Info</option>
+                    <option value="2">Warning</option>
+                    <option value="3">Average</option>
+                    <option value="4">High</option>
+                    <option value="5">Disaster</option>
+                  </select>
+                  <button class="btn btn-sm" onclick="bulkSetSeverity()">Apply to selected</button>
+                </div>
+              </div>
+              <table>
+                <thead><tr>
+                  <th><input type="checkbox" onchange="toggleAllTriggers(this,'tmpl-trig-cb')"></th>
+                  <th>Trigger name</th>
+                  <th>Severity</th>
+                  <th>Enabled</th>
+                  <th>Tags</th>
+                </tr></thead>
+                <tbody id="trig-tmpl-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- HOST TRIGGERS -->
+        <div id="triggers-tab-host" style="display:none">
+          <div class="filter-bar">
+            <select id="trig-host-select" onchange="loadHostTriggers()" style="width:280px">
+              <option value="">— Select a host —</option>
+            </select>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn btn-sm" id="trig-host-save-btn" style="display:none" onclick="saveHostTriggerChanges()">Save all changes</button>
+            </div>
+          </div>
+          <div id="trig-host-hint" class="section-hint">Select a host to view and edit its triggers individually. Changes only affect this host — template is not modified.</div>
+          <div id="trig-host-content" style="display:none">
+            <div class="card">
+              <div class="card-header"><span class="card-title">Host triggers</span></div>
+              <table>
+                <thead><tr>
+                  <th>Trigger name</th>
+                  <th>Severity</th>
+                  <th>Enabled</th>
+                  <th>Current state</th>
+                </tr></thead>
+                <tbody id="trig-host-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MACROS -->
+      <div id="page-macros" class="page">
+        <div class="tab-bar">
+          <button class="tab active" onclick="showMacrosTab('template',this)">Template macros</button>
+          <button class="tab" onclick="showMacrosTab('host',this)">Host macros</button>
+        </div>
+
+        <!-- TEMPLATE MACROS -->
+        <div id="macros-tab-template">
+          <div class="filter-bar">
+            <select id="macro-template-select" onchange="loadTemplateMacros()" style="width:280px">
+              <option value="">— Select a template —</option>
+            </select>
+          </div>
+          <div id="macro-tmpl-hint" class="section-hint">Template macros are defaults that apply to all hosts using this template. Host macros override these per-host.</div>
+          <div id="macro-tmpl-content" style="display:none">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Macros</span>
+                <button class="btn btn-sm btn-primary" onclick="addTemplateMacroRow()">+ Add macro</button>
+              </div>
+              <table>
+                <thead><tr><th>Macro</th><th>Value</th><th>Description</th><th></th></tr></thead>
+                <tbody id="macro-tmpl-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- HOST MACROS -->
+        <div id="macros-tab-host" style="display:none">
+          <div class="filter-bar">
+            <select id="macro-host-select" onchange="loadHostMacros()" style="width:280px">
+              <option value="">— Select a host —</option>
+            </select>
+          </div>
+          <div id="macro-host-hint" class="section-hint">Host macros override template defaults for this specific host. Use context macros like <span class="monospace">{$IFCONTROL:"GigabitEthernet1/0/49"}</span> to control individual interfaces.</div>
+          <div id="macro-host-content" style="display:none">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Host macros</span>
+                <button class="btn btn-sm btn-primary" onclick="addHostMacroRow()">+ Add macro</button>
+              </div>
+              <table>
+                <thead><tr><th>Macro</th><th>Value</th><th>Description</th><th></th></tr></thead>
+                <tbody id="macro-host-tbody"></tbody>
+              </table>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Quick add — common macros</span></div>
+              <div style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px">
+                <button class="btn btn-sm" onclick="quickMacro('{$IFCONTROL}','0','Suppress all link-down alerts')">Suppress all link-downs</button>
+                <button class="btn btn-sm" onclick="quickMacro('{$SNMP_COMMUNITY}','public','SNMP community string')">Set SNMP community</button>
+                <button class="btn btn-sm" onclick="quickMacro('{$CPU.UTIL.CRIT}','90','CPU critical threshold %')">CPU threshold</button>
+                <button class="btn btn-sm" onclick="quickMacro('{$TEMP.MAX.WARN}','55','Temperature warning threshold')">Temp threshold</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div id="page-actions" class="page">
+        <div class="section-hint">Actions control what Zabbix does when a problem is created — who gets notified and at what severity. Lowering the severity threshold means fewer notifications without losing problem logs.</div>
+        <div id="actions-loading" class="card" style="padding:24px;text-align:center;color:#888"><span class="spinner"></span> Loading actions…</div>
+        <div id="actions-list"></div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-header"><span class="card-title">How severity and notifications work together</span></div>
+          <div style="padding:16px">
+            <table>
+              <thead><tr><th>Severity</th><th>Shows as problem</th><th>Recommended use</th><th>Notify?</th></tr></thead>
+              <tbody>
+                <tr><td><span class="badge badge-err">Disaster</span></td><td>Yes</td><td>Complete outage, core switch down</td><td>Yes</td></tr>
+                <tr><td><span class="badge badge-err">High</span></td><td>Yes</td><td>Trunk down, host unreachable</td><td>Yes</td></tr>
+                <tr><td><span class="badge badge-warn">Average</span></td><td>Yes</td><td>High CPU, temperature critical</td><td>Optional</td></tr>
+                <tr><td><span class="badge badge-warn">Warning</span></td><td>Yes</td><td>Interface errors, temp warning</td><td>No</td></tr>
+                <tr><td><span class="badge badge-info">Info</span></td><td>Yes — filtered view</td><td>Access port down, duplex mismatch</td><td>No</td></tr>
+                <tr><td><span class="badge badge-gray">Not classified</span></td><td>Yes — hidden by default</td><td>Noise you want logged only</td><td>No</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- IMPORT -->
+      <div id="page-import" class="page">
+        <div class="tab-bar">
+          <button class="tab active" onclick="showImportTab('import',this)">Import new hosts</button>
+          <button class="tab" onclick="showImportTab('update',this)">Bulk update existing</button>
+        </div>
+        <div id="import-tab-import">
+          <div class="alert alert-info">CSV columns: <span class="monospace">hostname, dns_or_ip, snmp_community, template_name, hostgroup, snmp_version</span></div>
+          <div id="import-alert" style="display:none"></div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Upload CSV</span><button class="btn btn-sm" onclick="downloadImportExample()">Download example</button></div>
+            <div style="padding:16px">
+              <div class="upload-area" onclick="document.getElementById('import-csv-file').click()">
+                <input type="file" id="import-csv-file" accept=".csv" onchange="handleImportCSV(this)">Click to select CSV file</div>
+            </div>
+          </div>
+          <div id="import-preview" style="display:none">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Preview — <span id="import-count">0</span> rows</span>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-sm" onclick="clearImport()">Clear</button>
+                  <button class="btn btn-sm btn-primary" onclick="runImport()">Import valid rows</button>
+                </div>
+              </div>
+              <table>
+                <thead><tr><th>#</th><th>Hostname</th><th>DNS/IP</th><th>Community</th><th>Template</th><th>Group</th><th>SNMP</th><th>Status</th></tr></thead>
+                <tbody id="import-preview-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="import-progress" style="display:none">
+            <div class="card"><div class="card-header"><span class="card-title">Importing…</span></div>
+              <div style="padding:16px">
+                <div style="font-size:13px;margin-bottom:6px"><span id="import-prog-text">0 / 0</span></div>
+                <div class="progress-bar-wrap"><div class="progress-bar" id="import-prog-bar" style="width:0%"></div></div>
+                <div class="log-box" id="import-log"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="import-tab-update" style="display:none">
+          <div class="alert alert-info">CSV columns: <span class="monospace">hostname, template_name, hostgroup, snmp_community, snmp_version</span><br><span class="text-muted" style="font-size:12px">Leave columns blank to skip updating that field.</span></div>
+          <div id="update-alert" style="display:none"></div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Upload CSV</span><button class="btn btn-sm" onclick="downloadUpdateExample()">Download example</button></div>
+            <div style="padding:16px">
+              <div class="upload-area" onclick="document.getElementById('update-csv-file').click()">
+                <input type="file" id="update-csv-file" accept=".csv" onchange="handleUpdateCSV(this)">Click to select CSV file</div>
+            </div>
+          </div>
+          <div id="update-preview" style="display:none">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Preview — <span id="update-count">0</span> rows</span>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-sm" onclick="clearUpdate()">Clear</button>
+                  <button class="btn btn-sm btn-primary" onclick="runUpdate()">Apply changes</button>
+                </div>
+              </div>
+              <table>
+                <thead><tr><th>Hostname</th><th>Found</th><th>Template</th><th>Group</th><th>Community</th><th>Status</th></tr></thead>
+                <tbody id="update-preview-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="update-progress" style="display:none">
+            <div class="card"><div class="card-header"><span class="card-title">Updating…</span></div>
+              <div style="padding:16px">
+                <div style="font-size:13px;margin-bottom:6px"><span id="update-prog-text">0 / 0</span></div>
+                <div class="progress-bar-wrap"><div class="progress-bar" id="update-prog-bar" style="width:0%"></div></div>
+                <div class="log-box" id="update-log"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- HOST EDIT MODAL -->
+<div id="host-modal" class="modal-backdrop">
+  <div class="modal" style="width:520px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="modal-title" style="margin-bottom:0" id="host-modal-title">Edit host</div>
+      <button class="btn btn-sm" onclick="closeHostModal()">✕</button>
+    </div>
+    <div id="host-modal-alert" style="display:none"></div>
+    <div class="form-group"><label>Hostname</label><input type="text" id="hm-hostname"></div>
+    <div class="form-group"><label>Visible name</label><input type="text" id="hm-visiblename"><div class="form-note">Leave blank to use hostname</div></div>
+    <div class="form-row">
+      <div class="form-group"><label>DNS / IP address</label><input type="text" id="hm-addr"></div>
+      <div class="form-group"><label>Resolve by</label><select id="hm-useip"><option value="0">DNS name</option><option value="1">IP address</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>SNMP community</label><input type="text" id="hm-community" placeholder="public"></div>
+      <div class="form-group"><label>SNMP port</label><input type="text" id="hm-port" value="161"></div>
+    </div>
+    <div class="form-group">
+      <label>Templates</label>
+      <div id="hm-current-templates" style="margin-bottom:6px;display:flex;flex-wrap:wrap;gap:4px"></div>
+      <select id="hm-add-template"><option value="">— Add a template —</option></select>
+      <div id="hm-templates-to-add" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px"></div>
+    </div>
+    <div class="form-group"><label>Host group</label><select id="hm-group"></select></div>
+    <div class="form-group"><label>Status</label><select id="hm-status"><option value="0">Enabled</option><option value="1">Disabled</option></select></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" onclick="deleteCurrentHost()" style="margin-right:auto">Remove host</button>
+      <button class="btn" onclick="closeHostModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveHost()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- MASS TEMPLATE MODAL -->
+<div id="mass-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-title">Bulk assign template</div>
+    <div class="form-group"><label>Template</label><select id="mass-template-select"></select></div>
+    <div class="form-group"><label>Action</label>
+      <select id="mass-action">
+        <option value="link">Link — add alongside existing templates</option>
+        <option value="replace">Replace — remove existing, assign this one</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeMassModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="applyMassTemplate()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAG EDITOR MODAL -->
+<div id="tag-modal" class="modal-backdrop">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">Edit tags — <span id="tag-modal-trigger-name" style="font-weight:400;color:#666"></span></div>
+    <div id="tag-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+    <div class="tag-input-wrap">
+      <input type="text" id="tag-name-input" placeholder="Tag name" style="flex:1">
+      <input type="text" id="tag-value-input" placeholder="Value (optional)" style="flex:1">
+      <button class="btn btn-sm" onclick="addTagFromInput()">Add</button>
+    </div>
+    <div class="form-note" style="margin-top:6px">Common tags: <span class="monospace">scope: access-port-noise</span>, <span class="monospace">scope: trunk</span>, <span class="monospace">notify: no</span></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeTagModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTagsForTrigger()">Save tags</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SEV_LABELS = ['Not classified','Info','Warning','Average','High','Disaster'];
+const SEV_CLASSES = ['badge-gray','badge-info','badge-warn','badge-warn','badge-err','badge-err'];
+let authToken=null,zabbixUrl='';
+let allHosts=[],allTemplates=[],allGroups=[];
+let templateTriggerChanges={},hostTriggerChanges={};
+let currentHostId=null,templatesToAdd=[],templatesToRemove=[];
+let currentTagTriggerid=null,currentTags=[],currentTagType='';
+let importRows=[],updateRows=[];
+
+function apiUrl(){return zabbixUrl.replace(/\/$/,'')+'/api_jsonrpc.php'}
+async function zabbixCall(method,params){
+  const body={jsonrpc:'2.0',method,params,id:1};
+  if(authToken)body.auth=authToken;
+  const r=await fetch(apiUrl(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await r.json();
+  if(data.error)throw new Error(data.error.data||data.error.message);
+  return data.result;
+}
+
+async function doLogin(){
+  const url=document.getElementById('zabbix-url').value.trim();
+  const user=document.getElementById('zabbix-user').value.trim();
+  const pass=document.getElementById('zabbix-pass').value;
+  const errEl=document.getElementById('login-error');
+  errEl.style.display='none';
+  if(!url){errEl.textContent='Enter a Zabbix URL.';errEl.style.display='block';return}
+  zabbixUrl=url;
+  try{
+    authToken=await zabbixCall('user.login',{username:user,password:pass});
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    document.getElementById('sidebar-server').textContent=new URL(url).hostname;
+    await Promise.all([loadHosts(),loadTemplates(),loadHostGroups()]);
+    populateTriggerSelects();
+    populateMacroSelects();
+    loadActions();
+  }catch(e){
+    errEl.textContent='Connection failed: '+e.message;
+    errEl.style.display='block';
+    authToken=null;
+  }
+}
+
+function doLogout(){
+  authToken=null;zabbixUrl='';
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('zabbix-pass').value='';
+}
+
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  const titles={hosts:'Hosts',triggers:'Triggers',macros:'Macros',actions:'Actions',import:'Import / Update'};
+  document.getElementById('page-title').textContent=titles[name]||name;
+}
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function sevBadge(s){return`<span class="badge ${SEV_CLASSES[s]||'badge-gray'}">${SEV_LABELS[s]||s}</span>`}
+function availBadge(a){return a==='1'?'<span class="badge badge-ok">Up</span>':a==='2'?'<span class="badge badge-err">Down</span>':'<span class="badge badge-gray">Unknown</span>'}
+function parseCSV(text){
+  const lines=text.trim().split('\n').filter(l=>l.trim()&&!l.startsWith('#'));
+  return lines.slice(1).map(line=>line.split(',').map(s=>s.trim().replace(/^"|"$/g,'')));
+}
+
+// --- HOSTS ---
+async function loadHosts(){
+  document.getElementById('hosts-tbody').innerHTML='<tr class="loading-row"><td colspan="6"><span class="spinner"></span> Loading…</td></tr>';
+  try{
+    allHosts=await zabbixCall('host.get',{
+      output:['hostid','name','available','status'],
+      selectInterfaces:['ip','dns','useip','type'],
+      selectParentTemplates:['templateid','name'],
+      selectGroups:['groupid','name'],
+      selectTriggers:['triggerid','value']
+    });
+    populateTriggerHostSelect();
+    populateMacroHostSelect();
+    renderHosts(allHosts);
+  }catch(e){
+    document.getElementById('hosts-tbody').innerHTML=`<tr><td colspan="6" class="text-err" style="padding:16px">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function filterHosts(){
+  const q=document.getElementById('host-search').value.toLowerCase();
+  const g=document.getElementById('host-group-filter').value;
+  const s=document.getElementById('host-status-filter').value;
+  renderHosts(allHosts.filter(h=>(!q||h.name.toLowerCase().includes(q))&&(!g||h.groups?.some(gr=>gr.groupid===g))&&(!s||h.available===s)));
+}
+
+function renderHosts(hosts){
+  const tbody=document.getElementById('hosts-tbody');
+  if(!hosts.length){tbody.innerHTML='<tr><td colspan="6" class="empty">No hosts found</td></tr>';return}
+  tbody.innerHTML=hosts.map(h=>{
+    const iface=h.interfaces?.[0];
+    const addr=iface?(iface.useip==='1'?iface.ip:iface.dns):'—';
+    const tmpls=(h.parentTemplates||[]).map(t=>`<span class="badge badge-gray" style="margin-right:2px">${escHtml(t.name)}</span>`).join('')||'<span class="text-muted">None</span>';
+    return`<tr style="cursor:pointer" onclick="openHostModal('${h.hostid}')" title="Click to edit">
+      <td onclick="event.stopPropagation()"><input type="checkbox" class="host-cb" value="${h.hostid}"></td>
+      <td>${escHtml(h.name)}</td>
+      <td class="monospace text-muted">${escHtml(addr)}</td>
+      <td>${tmpls}</td>
+      <td>${availBadge(h.available)}</td>
+      <td onclick="event.stopPropagation()"><button class="btn btn-sm btn-danger" onclick="deleteHost('${h.hostid}','${escHtml(h.name)}')">Remove</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleAllHosts(cb){document.querySelectorAll('.host-cb').forEach(c=>c.checked=cb.checked)}
+function getSelectedHostIds(){return[...document.querySelectorAll('.host-cb:checked')].map(c=>c.value)}
+async function deleteHost(id,name){
+  if(!confirm(`Remove "${name}" from Zabbix?`))return;
+  try{await zabbixCall('host.delete',[id]);loadHosts()}catch(e){alert('Error: '+e.message)}
+}
+function exportHostsCSV(){
+  const rows=[['hostname','dns_or_ip','template','group','available']];
+  allHosts.forEach(h=>{
+    const iface=h.interfaces?.[0];
+    const addr=iface?(iface.useip==='1'?iface.ip:iface.dns):'';
+    rows.push([h.name,addr,(h.parentTemplates||[]).map(t=>t.name).join('; '),(h.groups||[]).map(g=>g.name).join('; '),h.available==='1'?'up':h.available==='2'?'down':'unknown']);
+  });
+  dlCSV(rows,'zabbix-hosts.csv');
+}
+
+// --- HOST MODAL ---
+async function openHostModal(hostid){
+  currentHostId=hostid;templatesToAdd=[];templatesToRemove=[];
+  document.getElementById('host-modal-alert').style.display='none';
+  document.getElementById('host-modal').classList.add('open');
+  try{
+    const hosts=await zabbixCall('host.get',{output:['hostid','host','name','status'],hostids:[hostid],selectInterfaces:['interfaceid','ip','dns','useip','port','type'],selectParentTemplates:['templateid','name'],selectGroups:['groupid','name'],selectMacros:['macro','value']});
+    if(!hosts.length){alert('Host not found.');closeHostModal();return}
+    const h=hosts[0];
+    document.getElementById('host-modal-title').textContent=h.host;
+    document.getElementById('hm-hostname').value=h.host;
+    document.getElementById('hm-visiblename').value=h.name!==h.host?h.name:'';
+    document.getElementById('hm-status').value=h.status;
+    const iface=h.interfaces?.find(i=>i.type==='2')||h.interfaces?.[0];
+    if(iface){document.getElementById('hm-addr').value=iface.useip==='1'?iface.ip:iface.dns;document.getElementById('hm-useip').value=iface.useip;document.getElementById('hm-port').value=iface.port||'161'}
+    const comm=h.macros?.find(m=>m.macro==='{$SNMP_COMMUNITY}');
+    document.getElementById('hm-community').value=comm?comm.value:'';
+    renderModalTemplates(h.parentTemplates||[]);
+    const sel=document.getElementById('hm-add-template');
+    sel.innerHTML='<option value="">— Add a template —</option>'+allTemplates.map(t=>`<option value="${t.templateid}">${escHtml(t.name)}</option>`).join('');
+    sel.onchange=()=>{if(!sel.value)return;const tid=sel.value,tname=allTemplates.find(t=>t.templateid===tid)?.name||tid;if(!templatesToAdd.find(t=>t.templateid===tid)){templatesToAdd.push({templateid:tid,name:tname});renderModalAddedTemplates()}sel.value=''};
+    const grpSel=document.getElementById('hm-group');
+    grpSel.innerHTML=allGroups.map(g=>`<option value="${g.groupid}">${escHtml(g.name)}</option>`).join('');
+    const cg=h.groups?.[0];if(cg)grpSel.value=cg.groupid;
+  }catch(e){showHostModalAlert('Error loading host: '+e.message,'err')}
+}
+function renderModalTemplates(templates){
+  const el=document.getElementById('hm-current-templates');
+  if(!templates.length){el.innerHTML='<span class="text-muted" style="font-size:12px">No templates linked</span>';return}
+  el.innerHTML=templates.filter(t=>!templatesToRemove.includes(t.templateid)).map(t=>`<span class="badge badge-gray" style="cursor:pointer;padding-right:4px" onclick="removeModalTemplate('${t.templateid}','${escHtml(t.name)}')" title="Click to unlink">${escHtml(t.name)} <span style="color:#c62828;margin-left:3px">✕</span></span>`).join('');
+}
+function renderModalAddedTemplates(){
+  document.getElementById('hm-templates-to-add').innerHTML=templatesToAdd.map(t=>`<span class="badge badge-ok" style="cursor:pointer" onclick="cancelAddTemplate('${t.templateid}')">+ ${escHtml(t.name)} ✕</span>`).join('');
+}
+function removeModalTemplate(tid,tname){if(!confirm(`Unlink "${tname}"?`))return;templatesToRemove.push(tid);const h=allHosts.find(x=>x.hostid===currentHostId);renderModalTemplates(h?.parentTemplates||[])}
+function cancelAddTemplate(tid){templatesToAdd=templatesToAdd.filter(t=>t.templateid!==tid);renderModalAddedTemplates()}
+async function saveHost(){
+  const hostname=document.getElementById('hm-hostname').value.trim();
+  const addr=document.getElementById('hm-addr').value.trim();
+  if(!hostname){showHostModalAlert('Hostname required.','err');return}
+  if(!addr){showHostModalAlert('Address required.','err');return}
+  try{
+    const params={hostid:currentHostId,host:hostname,name:document.getElementById('hm-visiblename').value.trim()||hostname,status:document.getElementById('hm-status').value,groups:[{groupid:document.getElementById('hm-group').value}]};
+    if(templatesToAdd.length)params.templates=templatesToAdd.map(t=>({templateid:t.templateid}));
+    if(templatesToRemove.length)params.templates_clear=templatesToRemove.map(id=>({templateid:id}));
+    await zabbixCall('host.update',params);
+    const useip=document.getElementById('hm-useip').value;
+    const port=document.getElementById('hm-port').value||'161';
+    const hosts=await zabbixCall('host.get',{output:['hostid'],hostids:[currentHostId],selectInterfaces:['interfaceid','type']});
+    const iface=hosts[0]?.interfaces?.find(i=>i.type==='2')||hosts[0]?.interfaces?.[0];
+    if(iface)await zabbixCall('hostinterface.update',{interfaceid:iface.interfaceid,ip:useip==='1'?addr:'',dns:useip==='0'?addr:'',useip,port});
+    const comm=document.getElementById('hm-community').value.trim();
+    if(comm){
+      const ex=await zabbixCall('usermacro.get',{output:'extend',hostids:[currentHostId],filter:{macro:['{$SNMP_COMMUNITY}']}});
+      if(ex.length)await zabbixCall('usermacro.update',[{hostmacroid:ex[0].hostmacroid,value:comm}]);
+      else await zabbixCall('usermacro.create',{hostid:currentHostId,macro:'{$SNMP_COMMUNITY}',value:comm});
+    }
+    showHostModalAlert('Saved.','ok');
+    setTimeout(()=>closeHostModal(),800);
+    loadHosts();
+  }catch(e){showHostModalAlert('Error: '+e.message,'err')}
+}
+async function deleteCurrentHost(){
+  const name=document.getElementById('hm-hostname').value;
+  if(!confirm(`Remove "${name}"? Cannot be undone.`))return;
+  try{await zabbixCall('host.delete',[currentHostId]);closeHostModal();loadHosts()}catch(e){showHostModalAlert('Error: '+e.message,'err')}
+}
+function showHostModalAlert(msg,type){const el=document.getElementById('host-modal-alert');el.className='alert alert-'+type;el.textContent=msg;el.style.display='block'}
+function closeHostModal(){document.getElementById('host-modal').classList.remove('open');currentHostId=null;templatesToAdd=[];templatesToRemove=[]}
+
+// --- MASS TEMPLATE ---
+function openMassModal(){if(!getSelectedHostIds().length){alert('Select at least one host.');return}document.getElementById('mass-modal').classList.add('open')}
+function closeMassModal(){document.getElementById('mass-modal').classList.remove('open')}
+async function applyMassTemplate(){
+  const ids=getSelectedHostIds();const tid=document.getElementById('mass-template-select').value;const action=document.getElementById('mass-action').value;
+  if(!tid){alert('Select a template.');return}
+  try{
+    for(const id of ids){
+      if(action==='replace'){const h=allHosts.find(x=>x.hostid===id);const clears=(h?.parentTemplates||[]).map(t=>({templateid:t.templateid}));if(clears.length)await zabbixCall('host.update',{hostid:id,templates_clear:clears})}
+      await zabbixCall('host.update',{hostid:id,templates:[{templateid:tid}]});
+    }
+    closeMassModal();loadHosts();
+    showAlert('hosts-alert',`Templates updated on ${ids.length} host(s).`,'ok');
+  }catch(e){alert('Error: '+e.message)}
+}
+
+// --- TEMPLATES & SELECTS ---
+async function loadTemplates(){
+  try{
+    allTemplates=await zabbixCall('template.get',{output:['templateid','name'],sortfield:'name'});
+    document.getElementById('mass-template-select').innerHTML=allTemplates.map(t=>`<option value="${t.templateid}">${escHtml(t.name)}</option>`).join('');
+  }catch(e){console.error(e)}
+}
+async function loadHostGroups(){
+  try{
+    allGroups=await zabbixCall('hostgroup.get',{output:['groupid','name'],sortfield:'name'});
+    const sel=document.getElementById('host-group-filter');
+    allGroups.forEach(g=>{const o=document.createElement('option');o.value=g.groupid;o.textContent=g.name;sel.appendChild(o)});
+  }catch(e){}
+}
+function populateTriggerSelects(){
+  const sel=document.getElementById('trig-template-select');
+  sel.innerHTML='<option value="">— Select a template —</option>'+allTemplates.map(t=>`<option value="${t.templateid}">${escHtml(t.name)}</option>`).join('');
+}
+function populateTriggerHostSelect(){
+  const sel=document.getElementById('trig-host-select');
+  sel.innerHTML='<option value="">— Select a host —</option>'+allHosts.map(h=>`<option value="${h.hostid}">${escHtml(h.name)}</option>`).join('');
+}
+function populateMacroSelects(){
+  const sel=document.getElementById('macro-template-select');
+  sel.innerHTML='<option value="">— Select a template —</option>'+allTemplates.map(t=>`<option value="${t.templateid}">${escHtml(t.name)}</option>`).join('');
+}
+function populateMacroHostSelect(){
+  const sel=document.getElementById('macro-host-select');
+  sel.innerHTML='<option value="">— Select a host —</option>'+allHosts.map(h=>`<option value="${h.hostid}">${escHtml(h.name)}</option>`).join('');
+}
+
+// --- TRIGGERS ---
+function showTriggersTab(tab,btn){
+  document.getElementById('triggers-tab-template').style.display=tab==='template'?'block':'none';
+  document.getElementById('triggers-tab-host').style.display=tab==='host'?'block':'none';
+  document.querySelectorAll('#page-triggers .tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+let templateTriggersData=[];
+async function loadTemplateTriggers(){
+  const tid=document.getElementById('trig-template-select').value;
+  if(!tid){document.getElementById('trig-tmpl-content').style.display='none';document.getElementById('trig-tmpl-hint').style.display='block';return}
+  templateTriggerChanges={};
+  document.getElementById('trig-tmpl-save-btn').style.display='none';
+  document.getElementById('trig-tmpl-hint').style.display='none';
+  document.getElementById('trig-tmpl-content').style.display='block';
+  document.getElementById('trig-tmpl-tbody').innerHTML='<tr class="loading-row"><td colspan="5"><span class="spinner"></span> Loading…</td></tr>';
+  try{
+    templateTriggersData=await zabbixCall('triggerprototype.get',{
+      output:['triggerid','description','priority','status'],
+      templateids:[tid],selectTags:'extend',sortfield:'description'
+    });
+    renderTemplateTriggers();
+  }catch(e){document.getElementById('trig-tmpl-tbody').innerHTML=`<tr><td colspan="5" class="text-err" style="padding:16px">Error: ${e.message}</td></tr>`}
+}
+
+function renderTemplateTriggers(){
+  const tbody=document.getElementById('trig-tmpl-tbody');
+  if(!templateTriggersData.length){tbody.innerHTML='<tr><td colspan="5" class="empty">No trigger prototypes found</td></tr>';return}
+  tbody.innerHTML=templateTriggersData.map(t=>{
+    const chg=templateTriggerChanges[t.triggerid]||{};
+    const sev=chg.priority!==undefined?chg.priority:parseInt(t.priority);
+    const enabled=chg.status!==undefined?chg.status:t.status;
+    const tags=(chg.tags||t.tags||[]);
+    const isChanged=chg.priority!==undefined||chg.status!==undefined||chg.tags!==undefined;
+    return`<tr class="${isChanged?'inline-edit-row':''}">
+      <td><input type="checkbox" class="tmpl-trig-cb" value="${t.triggerid}"></td>
+      <td>${escHtml(t.description)}${isChanged?'<span class="changed-badge">unsaved</span>':''}</td>
+      <td>
+        <select class="sev-select" onchange="markTriggerChange('${t.triggerid}','priority',parseInt(this.value),'template')">
+          ${SEV_LABELS.map((l,i)=>`<option value="${i}"${sev===i?' selected':''}>${l}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <label class="toggle"><input type="checkbox" ${enabled==='0'?'checked':''} onchange="markTriggerChange('${t.triggerid}','status',this.checked?'0':'1','template')"><span class="toggle-slider"></span></label>
+      </td>
+      <td>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+          ${tags.map(tg=>`<span class="tag-chip">${escHtml(tg.tag)}${tg.value?': '+escHtml(tg.value):''}</span>`).join('')}
+          <button class="btn btn-xs" onclick="openTagModal('${t.triggerid}','template')">Edit tags</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function markTriggerChange(triggerid,field,value,type){
+  const store=type==='template'?templateTriggerChanges:hostTriggerChanges;
+  if(!store[triggerid])store[triggerid]={};
+  store[triggerid][field]=value;
+  const saveBtn=type==='template'?'trig-tmpl-save-btn':'trig-host-save-btn';
+  document.getElementById(saveBtn).style.display='inline-flex';
+  if(type==='template')renderTemplateTriggers();else renderHostTriggers();
+}
+
+async function saveTemplateTriggerChanges(){
+  const changes=Object.entries(templateTriggerChanges);
+  if(!changes.length)return;
+  try{
+    for(const[tid,chg]of changes){
+      const params={triggerid:tid};
+      if(chg.priority!==undefined)params.priority=chg.priority;
+      if(chg.status!==undefined)params.status=chg.status;
+      if(chg.tags!==undefined)params.tags=chg.tags;
+      await zabbixCall('triggerprototype.update',params);
+    }
+    templateTriggerChanges={};
+    document.getElementById('trig-tmpl-save-btn').style.display='none';
+    await loadTemplateTriggers();
+    showAlert('hosts-alert','Trigger prototypes updated.','ok');
+  }catch(e){alert('Error saving triggers: '+e.message)}
+}
+
+function toggleAllTriggers(cb,cls){document.querySelectorAll('.'+cls).forEach(c=>c.checked=cb.checked)}
+
+function bulkSetSeverity(){
+  const sev=document.getElementById('bulk-sev-select').value;
+  if(sev===''){alert('Select a severity.');return}
+  const selected=[...document.querySelectorAll('.tmpl-trig-cb:checked')].map(c=>c.value);
+  if(!selected.length){alert('Select at least one trigger.');return}
+  selected.forEach(tid=>markTriggerChange(tid,'priority',parseInt(sev),'template'));
+}
+
+let hostTriggersData=[];
+async function loadHostTriggers(){
+  const hid=document.getElementById('trig-host-select').value;
+  if(!hid){document.getElementById('trig-host-content').style.display='none';document.getElementById('trig-host-hint').style.display='block';return}
+  hostTriggerChanges={};
+  document.getElementById('trig-host-save-btn').style.display='none';
+  document.getElementById('trig-host-hint').style.display='none';
+  document.getElementById('trig-host-content').style.display='block';
+  document.getElementById('trig-host-tbody').innerHTML='<tr class="loading-row"><td colspan="4"><span class="spinner"></span> Loading…</td></tr>';
+  try{
+    hostTriggersData=await zabbixCall('trigger.get',{
+      output:['triggerid','description','priority','status','value'],
+      hostids:[hid],sortfield:'description',inherited:true
+    });
+    renderHostTriggers();
+  }catch(e){document.getElementById('trig-host-tbody').innerHTML=`<tr><td colspan="4" class="text-err" style="padding:16px">Error: ${e.message}</td></tr>`}
+}
+
+function renderHostTriggers(){
+  const tbody=document.getElementById('trig-host-tbody');
+  if(!hostTriggersData.length){tbody.innerHTML='<tr><td colspan="4" class="empty">No triggers found</td></tr>';return}
+  tbody.innerHTML=hostTriggersData.map(t=>{
+    const chg=hostTriggerChanges[t.triggerid]||{};
+    const sev=chg.priority!==undefined?chg.priority:parseInt(t.priority);
+    const enabled=chg.status!==undefined?chg.status:t.status;
+    const isChanged=chg.priority!==undefined||chg.status!==undefined;
+    const state=t.value==='1'?'<span class="badge badge-err">Problem</span>':'<span class="badge badge-ok">OK</span>';
+    return`<tr class="${isChanged?'inline-edit-row':''}">
+      <td>${escHtml(t.description)}${isChanged?'<span class="changed-badge">unsaved</span>':''}</td>
+      <td>
+        <select class="sev-select" onchange="markTriggerChange('${t.triggerid}','priority',parseInt(this.value),'host')">
+          ${SEV_LABELS.map((l,i)=>`<option value="${i}"${sev===i?' selected':''}>${l}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <label class="toggle"><input type="checkbox" ${enabled==='0'?'checked':''} onchange="markTriggerChange('${t.triggerid}','status',this.checked?'0':'1','host')"><span class="toggle-slider"></span></label>
+      </td>
+      <td>${state}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function saveHostTriggerChanges(){
+  const changes=Object.entries(hostTriggerChanges);
+  if(!changes.length)return;
+  try{
+    for(const[tid,chg]of changes){
+      const params={triggerid:tid};
+      if(chg.priority!==undefined)params.priority=chg.priority;
+      if(chg.status!==undefined)params.status=chg.status;
+      await zabbixCall('trigger.update',params);
+    }
+    hostTriggerChanges={};
+    document.getElementById('trig-host-save-btn').style.display='none';
+    await loadHostTriggers();
+  }catch(e){alert('Error saving triggers: '+e.message)}
+}
+
+// --- TAG MODAL ---
+function openTagModal(triggerid,type){
+  currentTagTriggerid=triggerid;
+  currentTagType=type;
+  const data=type==='template'?templateTriggersData:hostTriggersData;
+  const trig=data.find(t=>t.triggerid===triggerid);
+  const chg=type==='template'?templateTriggerChanges[triggerid]:hostTriggerChanges[triggerid];
+  currentTags=JSON.parse(JSON.stringify(chg?.tags||trig?.tags||[]));
+  document.getElementById('tag-modal-trigger-name').textContent=trig?.description||'';
+  renderTagChips();
+  document.getElementById('tag-name-input').value='';
+  document.getElementById('tag-value-input').value='';
+  document.getElementById('tag-modal').classList.add('open');
+}
+
+function renderTagChips(){
+  document.getElementById('tag-chips').innerHTML=currentTags.map((t,i)=>`
+    <span class="tag-chip">${escHtml(t.tag)}${t.value?': '+escHtml(t.value):''}<span class="remove" onclick="removeTag(${i})">×</span></span>`).join('')||'<span class="text-muted" style="font-size:12px">No tags</span>';
+}
+function removeTag(i){currentTags.splice(i,1);renderTagChips()}
+function addTagFromInput(){
+  const name=document.getElementById('tag-name-input').value.trim();
+  if(!name)return;
+  const value=document.getElementById('tag-value-input').value.trim();
+  currentTags.push({tag:name,value});
+  document.getElementById('tag-name-input').value='';
+  document.getElementById('tag-value-input').value='';
+  renderTagChips();
+}
+function saveTagsForTrigger(){
+  markTriggerChange(currentTagTriggerid,'tags',currentTags,currentTagType);
+  closeTagModal();
+}
+function closeTagModal(){document.getElementById('tag-modal').classList.remove('open');currentTagTriggerid=null;currentTags=[]}
+
+// --- MACROS ---
+function showMacrosTab(tab,btn){
+  document.getElementById('macros-tab-template').style.display=tab==='template'?'block':'none';
+  document.getElementById('macros-tab-host').style.display=tab==='host'?'block':'none';
+  document.querySelectorAll('#page-macros .tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function loadTemplateMacros(){
+  const tid=document.getElementById('macro-template-select').value;
+  if(!tid){document.getElementById('macro-tmpl-content').style.display='none';document.getElementById('macro-tmpl-hint').style.display='block';return}
+  document.getElementById('macro-tmpl-hint').style.display='none';
+  document.getElementById('macro-tmpl-content').style.display='block';
+  document.getElementById('macro-tmpl-tbody').innerHTML='<tr class="loading-row"><td colspan="4"><span class="spinner"></span> Loading…</td></tr>';
+  try{
+    const tpls=await zabbixCall('template.get',{output:['templateid'],templateids:[tid],selectMacros:'extend'});
+    renderMacroTable('macro-tmpl-tbody',tpls[0]?.macros||[],'template',tid);
+  }catch(e){document.getElementById('macro-tmpl-tbody').innerHTML=`<tr><td colspan="4" class="text-err" style="padding:16px">Error: ${e.message}</td></tr>`}
+}
+
+async function loadHostMacros(){
+  const hid=document.getElementById('macro-host-select').value;
+  if(!hid){document.getElementById('macro-host-content').style.display='none';document.getElementById('macro-host-hint').style.display='block';return}
+  document.getElementById('macro-host-hint').style.display='none';
+  document.getElementById('macro-host-content').style.display='block';
+  document.getElementById('macro-host-tbody').innerHTML='<tr class="loading-row"><td colspan="4"><span class="spinner"></span> Loading…</td></tr>';
+  try{
+    const macros=await zabbixCall('usermacro.get',{output:'extend',hostids:[hid],sortfield:'macro'});
+    renderMacroTable('macro-host-tbody',macros,'host',hid);
+  }catch(e){document.getElementById('macro-host-tbody').innerHTML=`<tr><td colspan="4" class="text-err" style="padding:16px">Error: ${e.message}</td></tr>`}
+}
+
+function renderMacroTable(tbodyId,macros,type,ownerId){
+  const tbody=document.getElementById(tbodyId);
+  if(!macros.length){tbody.innerHTML='<tr><td colspan="4" class="empty">No macros defined</td></tr>';return}
+  tbody.innerHTML=macros.map(m=>{
+    const mid=m.hostmacroid||m.macro;
+    return`<tr>
+      <td class="monospace">${escHtml(m.macro)}</td>
+      <td><input type="text" value="${escHtml(m.value)}" id="mv-${escHtml(mid)}" style="font-size:12px;padding:4px 8px"></td>
+      <td><input type="text" value="${escHtml(m.description||'')}" id="md-${escHtml(mid)}" placeholder="optional description" style="font-size:12px;padding:4px 8px"></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm" onclick="saveMacro('${type}','${ownerId}','${escHtml(mid)}','${escHtml(m.macro)}')">Save</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteMacro('${type}','${escHtml(mid)}','${type==='template'?'macro-template-select':'macro-host-select'}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function saveMacro(type,ownerId,macroid,macroName){
+  const val=document.getElementById('mv-'+macroid)?.value||'';
+  const desc=document.getElementById('md-'+macroid)?.value||'';
+  try{
+    if(type==='host'){
+      if(macroid===macroName){
+        await zabbixCall('usermacro.create',{hostid:ownerId,macro:macroName,value:val,description:desc});
+      }else{
+        await zabbixCall('usermacro.update',[{hostmacroid:macroid,value:val,description:desc}]);
+      }
+      loadHostMacros();
+    }else{
+      await zabbixCall('usermacro.update',[{hostmacroid:macroid,value:val,description:desc}]);
+      loadTemplateMacros();
+    }
+  }catch(e){alert('Error: '+e.message)}
+}
+
+async function deleteMacro(type,macroid,selectId){
+  if(!confirm('Delete this macro?'))return;
+  try{
+    await zabbixCall('usermacro.delete',[macroid]);
+    if(type==='host')loadHostMacros();else loadTemplateMacros();
+  }catch(e){alert('Error: '+e.message)}
+}
+
+function addHostMacroRow(){
+  const tbody=document.getElementById('macro-host-tbody');
+  const hid=document.getElementById('macro-host-select').value;
+  if(!hid)return;
+  const tempId='new-'+Date.now();
+  const row=document.createElement('tr');
+  row.className='inline-edit-row';
+  row.innerHTML=`
+    <td><input type="text" id="mn-${tempId}" placeholder="{$MACRO_NAME}" style="font-size:12px;padding:4px 8px;font-family:monospace"></td>
+    <td><input type="text" id="mv-${tempId}" placeholder="value" style="font-size:12px;padding:4px 8px"></td>
+    <td><input type="text" id="md-${tempId}" placeholder="description" style="font-size:12px;padding:4px 8px"></td>
+    <td><button class="btn btn-sm btn-primary" onclick="createHostMacro('${hid}','${tempId}')">Create</button></td>`;
+  const emptyRow=tbody.querySelector('.empty');
+  if(emptyRow)emptyRow.closest('tr').remove();
+  tbody.appendChild(row);
+}
+
+async function createHostMacro(hid,tempId){
+  const macro=document.getElementById('mn-'+tempId)?.value.trim();
+  const value=document.getElementById('mv-'+tempId)?.value||'';
+  const desc=document.getElementById('md-'+tempId)?.value||'';
+  if(!macro){alert('Macro name required.');return}
+  try{
+    await zabbixCall('usermacro.create',{hostid:hid,macro,value,description:desc});
+    loadHostMacros();
+  }catch(e){alert('Error: '+e.message)}
+}
+
+function addTemplateMacroRow(){
+  alert('Template macros are managed differently in Zabbix — editing them requires template-level access.\n\nUse Host macros to override values per-host, or edit directly in Zabbix templates.');
+}
+
+function quickMacro(macro,value,desc){
+  const hid=document.getElementById('macro-host-select').value;
+  if(!hid){alert('Select a host first.');return}
+  const tbody=document.getElementById('macro-host-tbody');
+  const tempId='quick-'+Date.now();
+  const row=document.createElement('tr');
+  row.className='inline-edit-row';
+  row.innerHTML=`
+    <td class="monospace">${escHtml(macro)}</td>
+    <td><input type="text" id="mv-${tempId}" value="${escHtml(value)}" style="font-size:12px;padding:4px 8px"></td>
+    <td><input type="text" id="md-${tempId}" value="${escHtml(desc)}" style="font-size:12px;padding:4px 8px"></td>
+    <td><button class="btn btn-sm btn-primary" onclick="createQuickMacro('${hid}','${escHtml(macro)}','${tempId}')">Add</button></td>`;
+  const emptyRow=tbody.querySelector('td.empty');
+  if(emptyRow)emptyRow.closest('tr').remove();
+  tbody.prepend(row);
+}
+
+async function createQuickMacro(hid,macro,tempId){
+  const value=document.getElementById('mv-'+tempId)?.value||'';
+  const desc=document.getElementById('md-'+tempId)?.value||'';
+  try{
+    const ex=await zabbixCall('usermacro.get',{output:'extend',hostids:[hid],filter:{macro:[macro]}});
+    if(ex.length)await zabbixCall('usermacro.update',[{hostmacroid:ex[0].hostmacroid,value,description:desc}]);
+    else await zabbixCall('usermacro.create',{hostid:hid,macro,value,description:desc});
+    loadHostMacros();
+  }catch(e){alert('Error: '+e.message)}
+}
+
+// --- ACTIONS ---
+async function loadActions(){
+  document.getElementById('actions-loading').style.display='block';
+  document.getElementById('actions-list').innerHTML='';
+  try{
+    const actions=await zabbixCall('action.get',{
+      output:['actionid','name','status','eventsource'],
+      selectConditions:'extend',
+      selectOperations:'extend',
+      filter:{eventsource:0}
+    });
+    document.getElementById('actions-loading').style.display='none';
+    if(!actions.length){document.getElementById('actions-list').innerHTML='<div class="alert alert-warn">No trigger actions found. Create one in Zabbix first.</div>';return}
+    document.getElementById('actions-list').innerHTML=actions.map(a=>renderActionCard(a)).join('');
+  }catch(e){document.getElementById('actions-loading').innerHTML=`<div class="text-err">Error: ${e.message}</div>`}
+}
+
+function renderActionCard(action){
+  const sevCond=action.conditions?.find(c=>c.conditiontype==='4');
+  const currentSev=sevCond?parseInt(sevCond.value):null;
+  const statusBadge=action.status==='0'?'<span class="badge badge-ok">Enabled</span>':'<span class="badge badge-err">Disabled</span>';
+  return`<div class="card">
+    <div class="card-header">
+      <span class="card-title">${escHtml(action.name)}</span>
+      ${statusBadge}
+    </div>
+    <div style="padding:16px">
+      <div class="form-row" style="max-width:500px">
+        <div class="form-group">
+          <label>Minimum severity to notify</label>
+          <select class="sev-select" style="width:100%;font-size:13px;padding:6px 10px" id="action-sev-${action.actionid}">
+            ${SEV_LABELS.map((l,i)=>`<option value="${i}"${currentSev===i?' selected':''}>${l}</option>`).join('')}
+          </select>
+          <div class="form-note">Problems below this severity will still log but won't trigger this action</div>
+        </div>
+        <div class="form-group">
+          <label>Action status</label>
+          <select style="width:100%;font-size:13px;padding:6px 10px" id="action-status-${action.actionid}">
+            <option value="0"${action.status==='0'?' selected':''}>Enabled</option>
+            <option value="1"${action.status==='1'?' selected':''}>Disabled</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:4px">
+        <button class="btn btn-sm btn-primary" onclick="saveAction('${action.actionid}')">Save changes</button>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:#888">
+        ${(action.conditions||[]).map(c=>renderConditionSummary(c)).join(' <span style="color:#bbb">·</span> ')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderConditionSummary(c){
+  const types={'4':'Severity','1':'Host','2':'Host group','3':'Trigger','13':'Template'};
+  const ops={'0':'=','1':'≠','2':'like','3':'not like','4':'in','5':'≥','6':'≤','7':'not in'};
+  const type=types[c.conditiontype]||c.conditiontype;
+  const op=ops[c.operator]||c.operator;
+  let val=c.value;
+  if(c.conditiontype==='4')val=SEV_LABELS[parseInt(c.value)]||c.value;
+  return`<span>${escHtml(type)} ${escHtml(op)} <strong>${escHtml(val)}</strong></span>`;
+}
+
+async function saveAction(actionid){
+  const sev=document.getElementById('action-sev-'+actionid).value;
+  const status=document.getElementById('action-status-'+actionid).value;
+  try{
+    const actions=await zabbixCall('action.get',{output:'extend',actionids:[actionid],selectConditions:'extend',selectOperations:'extend',selectRecoveryOperations:'extend',selectUpdateOperations:'extend'});
+    if(!actions.length){alert('Action not found.');return}
+    const action=actions[0];
+    let conditions=action.conditions.filter(c=>c.conditiontype!=='4');
+    conditions.push({conditiontype:'4',operator:'5',value:sev});
+    await zabbixCall('action.update',{actionid,status,conditions,operations:action.operations,recovery_operations:action.recovery_operations||[],update_operations:action.update_operations||[]});
+    loadActions();
+  }catch(e){alert('Error: '+e.message)}
+}
+
+// --- IMPORT ---
+function showImportTab(tab,btn){
+  document.getElementById('import-tab-import').style.display=tab==='import'?'block':'none';
+  document.getElementById('import-tab-update').style.display=tab==='update'?'block':'none';
+  document.querySelectorAll('#page-import .tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+async function handleImportCSV(input){
+  const file=input.files[0];if(!file)return;
+  const text=await file.text();
+  const rows=parseCSV(text);
+  const existingNames=new Set(allHosts.map(h=>h.name.toLowerCase()));
+  const templateNames=new Set(allTemplates.map(t=>t.name.toLowerCase()));
+  importRows=rows.map(cols=>({hostname:cols[0]||'',addr:cols[1]||'',community:cols[2]||'public',template:cols[3]||'',group:cols[4]||'Network Switches',snmpVersion:cols[5]||'2',errors:[],warns:[]})).filter(r=>r.hostname);
+  importRows.forEach(r=>{
+    if(!r.addr)r.errors.push('Missing address');
+    if(r.template&&!templateNames.has(r.template.toLowerCase()))r.warns.push('Template not in Zabbix');
+    if(existingNames.has(r.hostname.toLowerCase()))r.warns.push('Already exists — skip');
+  });
+  document.getElementById('import-count').textContent=importRows.length;
+  document.getElementById('import-preview').style.display='block';
+  document.getElementById('import-progress').style.display='none';
+  document.getElementById('import-preview-tbody').innerHTML=importRows.map((r,i)=>{
+    const hasErr=r.errors.length>0,hasWarn=r.warns.length>0;
+    const st=hasErr?`<span class="badge badge-err">Invalid</span> <span class="validation-err" style="font-size:11px;color:#c62828">${r.errors.join(', ')}</span>`:hasWarn?`<span class="badge badge-skip">Warning</span> <span style="font-size:11px;color:#e65100">${r.warns.join(', ')}</span>`:'<span class="badge badge-ok">Ready</span>';
+    return`<tr><td class="text-muted">${i+1}</td><td>${escHtml(r.hostname)}</td><td class="monospace">${escHtml(r.addr)}</td><td>${escHtml(r.community)}</td><td>${escHtml(r.template)||'<span class="text-muted">None</span>'}</td><td>${escHtml(r.group)}</td><td>${escHtml(r.snmpVersion)}</td><td>${st}</td></tr>`;
+  }).join('');
+}
+async function runImport(){
+  const valid=importRows.filter(r=>r.errors.length===0&&!r.warns.some(w=>w.includes('Already exists')));
+  if(!valid.length){alert('No valid rows.');return}
+  document.getElementById('import-preview').style.display='none';
+  document.getElementById('import-progress').style.display='block';
+  const log=document.getElementById('import-log');log.innerHTML='';
+  let ok=0,fail=0;
+  for(let i=0;i<valid.length;i++){
+    const r=valid[i];
+    document.getElementById('import-prog-text').textContent=`${i+1} / ${valid.length}`;
+    document.getElementById('import-prog-bar').style.width=Math.round((i+1)/valid.length*100)+'%';
+    try{
+      let groups=await zabbixCall('hostgroup.get',{output:['groupid'],filter:{name:[r.group]}});
+      if(!groups.length){await zabbixCall('hostgroup.create',{name:r.group});groups=await zabbixCall('hostgroup.get',{output:['groupid'],filter:{name:[r.group]}})}
+      const groupid=groups[0].groupid;
+      let templates=[];
+      if(r.template){const tpls=await zabbixCall('template.get',{output:['templateid'],filter:{name:[r.template]}});if(tpls.length)templates=[{templateid:tpls[0].templateid}]}
+      const isIp=/^\d+\.\d+\.\d+\.\d+$/.test(r.addr);
+      await zabbixCall('host.create',{host:r.hostname,interfaces:[{type:2,main:1,useip:isIp?1:0,ip:isIp?r.addr:'',dns:isIp?'':r.addr,port:'161'}],groups:[{groupid}],templates,macros:[{macro:'{$SNMP_COMMUNITY}',value:r.community}]});
+      log.innerHTML+=`<div class="log-ok">✓ ${escHtml(r.hostname)}</div>`;ok++;
+    }catch(e){log.innerHTML+=`<div class="log-err">✗ ${escHtml(r.hostname)}: ${escHtml(e.message)}</div>`;fail++}
+    log.scrollTop=log.scrollHeight;
+  }
+  log.innerHTML+=`<div style="margin-top:8px;font-weight:500">Done — ${ok} imported, ${fail} failed</div>`;
+  loadHosts();
+}
+function clearImport(){importRows=[];document.getElementById('import-preview').style.display='none';document.getElementById('import-progress').style.display='none';document.getElementById('import-csv-file').value='';document.getElementById('import-alert').style.display='none'}
+
+async function handleUpdateCSV(input){
+  const file=input.files[0];if(!file)return;
+  const text=await file.text();
+  const rows=parseCSV(text);
+  const hostMap={};allHosts.forEach(h=>hostMap[h.name.toLowerCase()]=h);
+  updateRows=rows.map(cols=>({hostname:cols[0]||'',template:cols[1]||'',group:cols[2]||'',community:cols[3]||'',snmpVersion:cols[4]||'',hostid:null,found:false})).filter(r=>r.hostname);
+  updateRows.forEach(r=>{const h=hostMap[r.hostname.toLowerCase()];if(h){r.hostid=h.hostid;r.found=true}});
+  document.getElementById('update-count').textContent=updateRows.length;
+  document.getElementById('update-preview').style.display='block';
+  document.getElementById('update-progress').style.display='none';
+  document.getElementById('update-preview-tbody').innerHTML=updateRows.map(r=>`<tr>
+    <td>${escHtml(r.hostname)}</td>
+    <td>${r.found?'<span class="badge badge-ok">Found</span>':'<span class="badge badge-err">Not found</span>'}</td>
+    <td>${r.template||'<span class="text-muted">—</span>'}</td>
+    <td>${r.group||'<span class="text-muted">—</span>'}</td>
+    <td>${r.community||'<span class="text-muted">—</span>'}</td>
+    <td>${r.found?(r.template||r.group||r.community?'<span class="badge badge-warn">Will update</span>':'<span class="badge badge-gray">No changes</span>'):'<span class="badge badge-err">Skip</span>'}</td>
+  </tr>`).join('');
+}
+async function runUpdate(){
+  const toUpdate=updateRows.filter(r=>r.found&&(r.template||r.group||r.community));
+  if(!toUpdate.length){alert('No rows to update.');return}
+  document.getElementById('update-preview').style.display='none';
+  document.getElementById('update-progress').style.display='block';
+  const log=document.getElementById('update-log');log.innerHTML='';
+  let ok=0,fail=0;
+  for(let i=0;i<toUpdate.length;i++){
+    const r=toUpdate[i];
+    document.getElementById('update-prog-text').textContent=`${i+1} / ${toUpdate.length}`;
+    document.getElementById('update-prog-bar').style.width=Math.round((i+1)/toUpdate.length*100)+'%';
+    try{
+      const params={hostid:r.hostid};
+      if(r.template){const tpls=await zabbixCall('template.get',{output:['templateid'],filter:{name:[r.template]}});if(tpls.length)params.templates=[{templateid:tpls[0].templateid}]}
+      if(r.group){let g=await zabbixCall('hostgroup.get',{output:['groupid'],filter:{name:[r.group]}});if(!g.length){await zabbixCall('hostgroup.create',{name:r.group});g=await zabbixCall('hostgroup.get',{output:['groupid'],filter:{name:[r.group]}})}params.groups=[{groupid:g[0].groupid}]}
+      await zabbixCall('host.update',params);
+      if(r.community){const ex=await zabbixCall('usermacro.get',{output:'extend',hostids:[r.hostid],filter:{macro:['{$SNMP_COMMUNITY}']}});if(ex.length)await zabbixCall('usermacro.update',[{hostmacroid:ex[0].hostmacroid,value:r.community}]);else await zabbixCall('usermacro.create',{hostid:r.hostid,macro:'{$SNMP_COMMUNITY}',value:r.community})}
+      log.innerHTML+=`<div class="log-ok">✓ ${escHtml(r.hostname)}</div>`;ok++;
+    }catch(e){log.innerHTML+=`<div class="log-err">✗ ${escHtml(r.hostname)}: ${escHtml(e.message)}</div>`;fail++}
+    log.scrollTop=log.scrollHeight;
+  }
+  log.innerHTML+=`<div style="margin-top:8px;font-weight:500">Done — ${ok} updated, ${fail} failed</div>`;
+  loadHosts();
+}
+function clearUpdate(){updateRows=[];document.getElementById('update-preview').style.display='none';document.getElementById('update-progress').style.display='none';document.getElementById('update-csv-file').value=''}
+
+function downloadImportExample(){dlCSV([['hostname','dns_or_ip','snmp_community','template_name','hostgroup','snmp_version'],['NELSW01','NELSW01.domain.local','public','HPE Aruba CX by SNMP','Network Switches','2'],['NELSW03','NELSW03.domain.local','public','HP Enterprise Switch by SNMP','Network Switches','2']],'import-example.csv')}
+function downloadUpdateExample(){dlCSV([['hostname','template_name','hostgroup','snmp_community','snmp_version'],['NELSW01','HPE Aruba CX by SNMP','Network Switches','','']],'update-example.csv')}
+function dlCSV(rows,filename){const csv=rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);a.download=filename;a.click()}
+function showAlert(id,msg,type){const el=document.getElementById(id);if(!el)return;el.className='alert alert-'+type;el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000)}
+</script>
+</body>
+</html>
